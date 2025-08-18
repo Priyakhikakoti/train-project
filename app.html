@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Station Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Grid.js -->
+  <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+  <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    .remarks-btn {
+      border: none;
+      background: transparent;
+      color: #0d6efd;
+      text-decoration: underline;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="mb-4">Station Admin Dashboard</h1>
+
+    <!-- Dashboard Cards -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="card p-3">
+          <h5>Finished Reports (Weekly)</h5>
+          <h2 id="finished-count">Loading...</h2>
+        </div>
+      </div>
+    </div>
+
+    <!-- Train Reports Table -->
+    <div class="mb-4 d-flex justify-content-between align-items-center">
+      <h4>Train Reports</h4>
+      <select onchange="loadTrainData(this.value)" class="form-select w-auto">
+        <option value="week">This Week</option>
+        <option value="month">This Month</option>
+        <option value="year">This Year</option>
+      </select>
+    </div>
+
+    <div id="table-gridjs"></div>
+  </div>
+
+  <!-- Modals -->
+  <div class="modal fade" id="case-modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5>Generate Case</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-3" id="train-name-input" readonly>
+          <textarea class="form-control" id="case-content-input" rows="5"></textarea>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="cancelCaseGeneration()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveCaseContent()">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+let currentCaseCheckbox = null;
+let currentCaseData = null;
+
+function loadTrainData(period = 'week') {
+  fetch(`http://localhost:5000/train-report/${period}`)
+    .then(res => res.json())
+    .then(json => {
+      if (json.status === 'success') {
+        const formatted = json.data.map(item => [
+          item.Date,
+          item.Train_Status,
+          item.Train_Name,
+          item.Time,
+          item.Remarks || '',
+          ''
+        ]);
+
+        document.getElementById("table-gridjs").innerHTML = '';
+        new gridjs.Grid({
+          columns: [
+            'Date',
+            'Train Status',
+            'Train Name',
+            'Time',
+            {
+              name: 'Remarks',
+              formatter: (cell, row) => {
+                return gridjs.html(`
+                  <button class="remarks-btn">${cell || '<i>Click to add</i>'}</button>
+                `);
+              }
+            },
+            {
+              name: 'Generate Case',
+              formatter: (cell, row) => {
+                const train = row.cells[2].data;
+                const date = row.cells[0].data;
+                return gridjs.html(`
+                  <input type="checkbox" onchange="handleCaseGeneration(this, '${train}', '${date}')">
+                `);
+              }
+            }
+          ],
+          data: formatted,
+          pagination: { limit: 5 },
+          sort: true,
+          search: true
+        }).render(document.getElementById("table-gridjs"));
+      }
+    });
+
+  fetch(`http://localhost:5000/report-summary/weekly`)
+    .then(res => res.json())
+    .then(json => {
+      if (json.status === 'success') {
+        const total = json.data.reduce((sum, row) => sum + row.Finished_Reports, 0);
+        document.getElementById('finished-count').textContent = total;
+      }
+    });
+}
+
+function handleCaseGeneration(checkbox, trainName, date) {
+  if (checkbox.checked) {
+    currentCaseCheckbox = checkbox;
+    currentCaseData = { trainName, date };
+    document.getElementById("train-name-input").value = trainName;
+    document.getElementById("case-content-input").value = '';
+    new bootstrap.Modal(document.getElementById("case-modal")).show();
+  }
+}
+
+function cancelCaseGeneration() {
+  if (currentCaseCheckbox) currentCaseCheckbox.checked = false;
+  currentCaseCheckbox = null;
+  currentCaseData = null;
+}
+
+function saveCaseContent() {
+  const content = document.getElementById("case-content-input").value.trim();
+  if (!content) {
+    alert("Please write something!");
+    return;
+  }
+
+  fetch("http://localhost:5000/add-case", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      train_name: currentCaseData.trainName,
+      date: currentCaseData.date,
+      content: content
+    })
+  })
+  .then(res => res.json())
+  .then(json => {
+    alert(json.status === "success" ? "✅ Case saved!" : "❌ Error saving case.");
+  });
+
+  cancelCaseGeneration();
+}
+
+// Load initial data
+document.addEventListener("DOMContentLoaded", () => loadTrainData());
+</script>
+</body>
+</html>

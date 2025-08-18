@@ -1,0 +1,395 @@
+{% extends 'vertical.html' %}
+
+{% load static %}
+
+{% block title %}Dashboard{% endblock title %}
+{% block extra_css %}
+
+<style>
+  .gridjs .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+    background-color: #0d6efd !important;
+    color: white !important;
+    border-color: #0d6efd !important;
+  }
+</style>
+<style>
+  /* Fix overlap of Grid.js search icon and input text */
+  .gridjs .gridjs-search input {
+    padding-left: 2rem !important;
+    /* Add spacing between icon and text */
+  }
+
+  .gridjs .gridjs-search svg {
+    left: 0.6rem !important;
+    /* Move icon slightly right */
+  }
+</style>
+
+<link href="{% static '/vendor/jsvectormap/jsvectormap.min.css' %}" rel="stylesheet" type="text/css">
+{% endblock extra_css %}
+
+{% block page_title %}
+{% include 'partials/page-title.html' with title="Station Admin Page" %}
+{% endblock page_title %}
+
+{% block page_content %}
+
+<div class="container-fluid">
+  <div class="row g-4">
+
+    <!-- Finished Report -->
+    <div class="col-md-4">
+      <div class="card overflow-hidden h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <h5 class="text-muted fs-13 text-uppercase">Finished Report</h5>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false" id="dropdownFinished">
+                Sort date
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="updateCard('finished', 'This week')">This week</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateCard('finished', 'This month')">This month</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateCard('finished', 'This year')">This year</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 my-2 py-1">
+            <div class="user-img fs-42 flex-shrink-0">
+              <span class="avatar-title text-bg-primary rounded-circle fs-22">
+                <iconify-icon icon="solar:case-round-minimalistic-bold-duotone"></iconify-icon>
+              </span>
+            </div>
+            <h3 class="mb-0 fw-bold" id="finished-count">10</h3>
+            <iconify-icon icon="solar:cart-2-line-duotone"
+              class="ms-auto display-1 position-absolute opacity-25 text-muted widget-icon"></iconify-icon>
+            <div
+              class="d-flex justify-content-start align-items-center gap-2 mt-4 position-absolute bottom-0 pb-3 ">
+              <span id="finished-percent" class="fw-medium text-danger" style="font-size: 13px;">
+                <i class="ti ti-caret-down-filled"></i> 9.19%
+              </span>
+              <span id="finished-period" class="text-muted" style="font-size: 13px;">
+                Since last month
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerts Processed & Alerts Pending -->
+    <div class="col-md-4">
+      <div class="card overflow-hidden h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <h5 class="text-muted fs-13 text-uppercase">Alerts Processed / Alerts Pending</h5>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false" id="dropdownAlerts">
+                Sort date
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="updateCard('alerts', 'This week')">This week</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateCard('alerts', 'This month')">This month</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateCard('alerts', 'This year')">This year</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 my-2 py-1">
+            <div class="user-img fs-42 flex-shrink-0">
+              <span class="avatar-title text-bg-primary rounded-circle fs-22">
+                <iconify-icon icon="solar:bill-list-bold-duotone"></iconify-icon>
+              </span>
+            </div>
+            <h3 class="mb-0 fw-bold" id="alerts-count-display">40 / 10</h3>
+            <iconify-icon icon="solar:banknote-2-line-duotone"
+              class="ms-auto display-1 position-absolute opacity-25 text-muted widget-icon"></iconify-icon>
+            <div
+              class="d-flex justify-content-start align-items-center gap-2 mt-4 position-absolute bottom-0 pb-3">
+              <span id="alerts-percent" class="fw-medium text-danger" style="font-size: 13px;">
+                <i class="ti ti-caret-down-filled"></i> 34.19%
+              </span>
+              <span id="alerts-period" class="text-muted" style="font-size: 13px;">
+                Since last month
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cases Completed & Initiated -->
+    <div class="col-md-4">
+      <div class="card overflow-hidden h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <h5 class="text-muted fs-13 text-uppercase">Cases Completed / Cases Initiated</h5>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                aria-expanded="false" id="dropdownCases">
+                Sort date
+              </button>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="updateCard('cases', 'This week')">This week</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateCard('cases', 'This month')">This month</a></li>
+                <li><a class="dropdown-item" href="#" onclick="updateCard('cases', 'This year')">This year</a></li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 my-2 py-1">
+            <div class="user-img fs-42 flex-shrink-0">
+              <span class="avatar-title text-bg-primary rounded-circle fs-22">
+                <iconify-icon icon="solar:wallet-money-bold-duotone"></iconify-icon>
+              </span>
+            </div>
+            <h3 class="mb-0 fw-bold" id="cases-count">20 / 10</h3>
+            <iconify-icon icon="solar:cardholder-line-duotone"
+              class="ms-auto display-1 position-absolute opacity-25 text-muted widget-icon"></iconify-icon>
+            <div
+              class="d-flex justify-content-start align-items-center gap-2 mt-4 position-absolute bottom-0 pb-3 ">
+              <span id="cases-percent" class="fw-medium text-danger" style="font-size: 13px;">
+                <i class="ti ti-caret-down-filled"></i> 23.19%
+              </span>
+              <span id="cases-period" class="text-muted" style="font-size: 13px;">
+                Since last month
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Table Section with proper alignment -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+      <script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+      <!-- ✅ Table Title -->
+      <div class="mb-3">
+        <h5 class="fw-bold text-uppercase text-primary" style="font-family: 'Inter', 'Segoe UI', sans-serif; letter-spacing: 1.2px; font-size: 1.1rem;">Train Report Table</h5>
+      </div>
+
+      <div id="table-gridjs"></div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  // Basic Table
+  new gridjs.Grid({
+    columns: [{
+      name: 'Date',
+      width: '100px',
+      formatter: (function (cell) {
+        return gridjs.html('<span class="fw-semibold">' + cell + '</span>');
+      })
+    },
+    {
+      name: 'Status',
+      width: '180px',
+    },
+    {
+      name: 'Train Name',
+      width: '200px',
+      formatter: (function (cell) {
+        return gridjs.html('<a href="">' + cell + '</a>');
+      })
+    },
+    {
+      name: 'Time',
+      width: '130px',
+    },
+    {
+      name: 'Remarks',
+      width: '180px',
+      formatter: (cell, row) => gridjs.html(`
+        <span style="cursor: pointer;" onclick="handleRemarksInput(this)">
+            ${cell || '<i>Click to add</i>'}
+        </span>
+    `)
+    },
+    {
+      name: 'Generate a case',
+      width: '150px',
+      formatter: () => gridjs.html('<input type="checkbox" />')
+    },],
+    pagination: {
+      limit: 5
+    },
+    sort: true,
+    search: true,
+    data: [
+      ["1-7-2025", "Finished", "Rajdhani", "10:00 am", "Lock broken", ""],
+      ["1-7-2025", "Unfinished", "Shatabdi", "11:00 pm", "", ""],
+      ["1-7-2025", "Finished", "Kanpur Express", "12:00 am", "", ""],
+      ["2-7-2025", "Unfinished", "Shatabdi", "7:00 am", "", ""],
+      ["3-7-2025", "Finished", "Rajdhani", "8:30 pm", "", ""],
+      ["3-7-2025", "Unfinished", "Shatabdi", "4:45 pm", "", ""],
+      ["3-7-2025", "Finished", "Rajdhani", "8:30 pm", "", ""],
+      ["3-7-2025", "Unfinished", "Kanpur Express", "6:46 pm", "Theft Detected", ""],
+      ["4-7-2025", "Finished", "Rajdhani", "4:34 am", "", ""],
+      ["5-7-2025", "Finished", "Shatabdi", "2:00 pm", "", ""],
+    ]
+  }).render(document.getElementById("table-gridjs"));
+</script>
+<script>
+  function handleRemarksInput(element) {
+    const currentText = element.innerText === "Click to add" ? "" : element.innerText;
+    const input = prompt("Enter remark:", currentText);
+    if (input !== null) {
+      element.innerText = input;
+    }
+  }
+</script>
+
+
+
+{% endblock page_content %}
+
+{% block extra_javascript %}
+<script src="{% static '/vendor/apexcharts/apexcharts.min.js' %}"></script>
+
+<!-- Vector Map Js -->
+<script src="{% static '/vendor/jsvectormap/jsvectormap.min.js' %}"></script>
+<script src="{% static '/vendor/jsvectormap/maps/world-merc.js' %}"></script>
+<script src="{% static '/vendor/jsvectormap/maps/world.js' %}"></script>
+
+<!-- Projects Analytics Dashboard App js -->
+<script src="{% static '/js/pages/dashboard.js' %}"></script>
+
+<script>
+  function updateCard(cardType, period) {
+    // Data simulation for all three cards
+    const data = {
+      finished: {
+        "This week": {
+          count: "135.4k",
+          percent: '<i class="ti ti-caret-up-filled"></i> 2.34%',
+          color: "text-success",
+          periodText: "Since last week"
+        },
+        "This month": {
+          count: "687.3k",
+          percent: '<i class="ti ti-caret-down-filled"></i> 9.19%',
+          color: "text-danger",
+          periodText: "Since last month"
+        },
+        "This year": {
+          count: "4.7M",
+          percent: '<i class="ti ti-caret-up-filled"></i> 17.42%',
+          color: "text-success",
+          periodText: "Since last year"
+        }
+      },
+      alerts: {
+        "This week": {
+          count: "45 / 8",
+          percent: '<i class="ti ti-caret-up-filled"></i> 5.12%',
+          color: "text-success",
+          periodText: "Since last week"
+        },
+        "This month": {
+          count: "40 / 10",
+          percent: '<i class="ti ti-caret-down-filled"></i> 34.19%',
+          color: "text-danger",
+          periodText: "Since last month"
+        },
+        "This year": {
+          count: "320 / 25",
+          percent: '<i class="ti ti-caret-up-filled"></i> 15.67%',
+          color: "text-success",
+          periodText: "Since last year"
+        }
+      },
+      cases: {
+        "This week": {
+          count: "25 / 12",
+          percent: '<i class="ti ti-caret-up-filled"></i> 8.45%',
+          color: "text-success",
+          periodText: "Since last week"
+        },
+        "This month": {
+          count: "20 / 10",
+          percent: '<i class="ti ti-caret-down-filled"></i> 23.19%',
+          color: "text-danger",
+          periodText: "Since last month"
+        },
+        "This year": {
+          count: "180 / 80",
+          percent: '<i class="ti ti-caret-up-filled"></i> 28.73%',
+          color: "text-success",
+          periodText: "Since last year"
+        }
+      }
+    };
+
+    const selected = data[cardType][period];
+
+    // Update dropdown button text
+    if (cardType === 'finished') {
+      document.getElementById('dropdownFinished').textContent = period;
+      document.getElementById('finished-count').textContent = selected.count;
+      const percentElem = document.getElementById('finished-percent');
+      percentElem.innerHTML = selected.percent;
+      percentElem.className = fw-medium ${selected.color};
+      document.getElementById('finished-period').textContent = selected.periodText;
+    } else if (cardType === 'alerts') {
+      document.getElementById('dropdownAlerts').textContent = period;
+      document.getElementById('alerts-count-display').textContent = selected.count;
+      const percentElem = document.getElementById('alerts-percent');
+      percentElem.innerHTML = selected.percent;
+      percentElem.className = fw-medium ${selected.color};
+      document.getElementById('alerts-period').textContent = selected.periodText;
+    } else if (cardType === 'cases') {
+      document.getElementById('dropdownCases').textContent = period;
+      document.getElementById('cases-count').textContent = selected.count;
+      const percentElem = document.getElementById('cases-percent');
+      percentElem.innerHTML = selected.percent;
+      percentElem.className = fw-medium ${selected.color};
+      document.getElementById('cases-period').textContent = selected.periodText;
+    }
+  }
+
+  // Update notification count based on alerts pending
+  function updateNotificationCount() {
+    const alertsPending = 10; // This should come from your backend/data source
+    
+    // Update notification badge in topbar
+    const alertsCountElement = document.getElementById('alerts-count');
+    const notificationAlertsCountElement = document.getElementById('notification-alerts-count');
+    
+    if (alertsCountElement) {
+      alertsCountElement.textContent = alertsPending;
+      // Show/hide badge based on alerts count
+      if (alertsPending > 0) {
+        alertsCountElement.style.display = 'flex';
+      } else {
+        alertsCountElement.style.display = 'none';
+      }
+    }
+    
+    if (notificationAlertsCountElement) {
+      notificationAlertsCountElement.textContent = alertsPending;
+    }
+  }
+
+  // Initialize notification count on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    updateNotificationCount();
+  });
+
+
+</script>
+
+{% endblock extra_javascript %}

@@ -1,0 +1,281 @@
+{% extends 'vertical.html' %}
+{% load static %}
+
+{% block title %}Calendar{% endblock title %}
+
+{% block extra_css %}
+<link href="{% static 'vendor/fullcalendar/index.global.min.css' %}" rel="stylesheet">
+<style>
+.time-period-btn {
+    transition: all 0.3s ease;
+}
+.time-period-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.time-period-btn.active {
+    background-color: #556ee6 !important;
+    border-color: #556ee6 !important;
+    color: white !important;
+}
+
+/* Force all FullCalendar buttons to be blue */
+.fc .fc-button {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+.fc .fc-button:hover,
+.fc .fc-button:focus,
+.fc .fc-button:active,
+.fc .fc-button.fc-button-active,
+.fc .fc-button:not(:disabled):active,
+.fc .fc-button:not(:disabled).active {
+    background-color: #0056b3 !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+    box-shadow: none !important;
+}
+
+.fc .fc-button:disabled {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: white !important;
+    opacity: 0.65 !important;
+}
+
+/* Target all possible button states */
+.fc .fc-toolbar-chunk .fc-button-group .fc-button,
+.fc .fc-toolbar .fc-button,
+.fc-direction-ltr .fc-toolbar > * > .fc-button,
+button.fc-button,
+.fc-button.fc-button-primary {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+.fc .fc-toolbar-chunk .fc-button-group .fc-button:hover,
+.fc .fc-toolbar .fc-button:hover,
+.fc-direction-ltr .fc-toolbar > * > .fc-button:hover,
+button.fc-button:hover,
+.fc-button.fc-button-primary:hover {
+    background-color: #0056b3 !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+}
+
+/* More comprehensive targeting for all FullCalendar buttons */
+.fc .fc-button,
+.fc-button,
+button.fc-button,
+.fc .fc-toolbar button,
+.fc-header-toolbar .fc-button,
+#calendar .fc-button,
+#calendar .fc-toolbar-chunk .fc-button {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+    background-image: none !important;
+}
+
+.fc .fc-button:hover,
+.fc-button:hover,
+button.fc-button:hover,
+.fc .fc-toolbar button:hover,
+.fc-header-toolbar .fc-button:hover,
+#calendar .fc-button:hover,
+#calendar .fc-toolbar-chunk .fc-button:hover,
+.fc .fc-button:focus,
+.fc-button:focus,
+button.fc-button:focus,
+.fc .fc-toolbar button:focus,
+.fc-header-toolbar .fc-button:focus,
+#calendar .fc-button:focus,
+#calendar .fc-toolbar-chunk .fc-button:focus,
+.fc .fc-button:active,
+.fc-button:active,
+button.fc-button:active,
+.fc .fc-toolbar button:active,
+.fc-header-toolbar .fc-button:active,
+#calendar .fc-button:active,
+#calendar .fc-toolbar-chunk .fc-button:active,
+.fc .fc-button.fc-button-active,
+.fc-button.fc-button-active,
+button.fc-button.fc-button-active,
+.fc .fc-toolbar button.fc-button-active,
+.fc-header-toolbar .fc-button.fc-button-active,
+#calendar .fc-button.fc-button-active,
+#calendar .fc-toolbar-chunk .fc-button.fc-button-active {
+    background-color: #0056b3 !important;
+    border-color: #0056b3 !important;
+    color: white !important;
+    background-image: none !important;
+}
+</style>
+{% endblock extra_css %}
+
+{% block page_title %}
+{% include 'partials/page-title.html' with title="Calendar" %}
+{% endblock page_title %}
+
+{% block page_content %}
+<div class="container mt-4">
+  <button class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#trainStatusModal">
+    Create New Train Status
+  </button>
+
+  <!-- 🔹 Grid.js Table Placeholder -->
+  <div id="grid" class="mb-5"></div>
+
+  <!-- 🔹 Calendar Placeholder -->
+  <div id="calendar"></div> <!-- 🧠 this is the missing part! -->
+</div>
+{% endblock page_content %}
+
+
+
+{% block modal %}
+<div class="modal fade" id="event-modal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form class="needs-validation" name="event-form" id="forms-event" novalidate>
+                <div class="modal-header">
+                    <h4 class="modal-title" id="modal-title">Add/Edit Train Event</h4>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="event-alerts" class="form-label">Number of Alerts</label>
+                        <input type="number" class="form-control" id="event-alerts" required min="0" placeholder="Enter number of alerts" />
+                        <div class="invalid-feedback">Please provide a valid number of alerts</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event-pending" class="form-label">Number of Cases Pending</label>
+                        <input type="number" class="form-control" id="event-pending" required min="0" placeholder="Enter number of cases pending" />
+                        <div class="invalid-feedback">Please provide a valid number of cases pending</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event-processed" class="form-label">Number of Cases Processed</label>
+                        <input type="number" class="form-control" id="event-processed" required min="0" placeholder="Enter number of cases processed" />
+                        <div class="invalid-feedback">Please provide a valid number of cases processed</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="event-remarks" class="form-label">Remarks</label>
+                        <select class="form-select" id="event-remarks">
+                            <option value="">Select Remark</option>
+                            <option value="Lock Broken">Lock Broken</option>
+                            <option value="Signal Failure">Signal Failure</option>
+                            <option value="Track Maintenance">Track Maintenance</option>
+                            <option value="Weather Delay">Weather Delay</option>
+                            <option value="Technical Issue">Technical Issue</option>
+                            <option value="Scheduled Maintenance">Scheduled Maintenance</option>
+                            <option value="Emergency">Emergency</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <button type="button" class="btn btn-danger" id="btn-delete-event">Delete</button>
+                        <button type="button" class="btn btn-light ms-auto" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="btn-save-event">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock modal %}
+
+{% block extra_javascript %}
+<!-- FullCalendar + Grid.js -->
+<script src="{% static 'vendor/fullcalendar/index.global.min.js' %}"></script>
+<link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+<script src="https://unpkg.com/gridjs/dist/gridjs.umd.js"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // 🌟 Load Grid.js Table
+    loadGridData();
+
+    // 📆 FullCalendar init (only if #calendar exists)
+    const calendarEl = document.getElementById("calendar");
+    if (calendarEl) {
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: "dayGridMonth"
+      });
+      calendar.render();
+    }
+
+    // 🚂 Train Status Form Submission
+    const trainStatusForm = document.getElementById("trainStatusForm");
+    if (trainStatusForm) {
+      trainStatusForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+          alerts: formData.get("alerts"),
+          cases_pending: formData.get("cases_pending"),
+          cases_processed: formData.get("cases_processed"),
+          remarks: formData.get("remarks")
+        };
+
+        fetch("http://127.0.0.1:5000/train-status/add", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+                      },
+          body: JSON.stringify(data)
+        })
+        .then(response => {
+          if (!response.ok) throw new Error("Failed to save.");
+          return response.json();
+        })
+        .then(result => {
+          alert("Train status saved!");
+          trainStatusForm.reset();
+          const modal = bootstrap.Modal.getInstance(document.getElementById("trainStatusModal"));
+          if (modal) modal.hide();
+          loadGridData(); // 🔁 Refresh table
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          alert("Something went wrong!");
+        });
+      });
+    }
+  });
+
+  // 🧩 Load Grid.js Data Function
+  function loadGridData() {
+    const wrapper = document.getElementById("grid");
+    if (!wrapper) return;
+
+    wrapper.innerHTML = "";
+
+    new gridjs.Grid({
+      columns: ["ID", "Alerts", "Cases Pending", "Cases Processed", "Remarks"],
+      server: {
+        url: "http://127.0.0.1:5000/train-status/all",
+        headers: {
+          "Authorization": "Bearer " + localStorage.getItem("token")
+        },
+        then: data => data.map(item => [
+          item.id,
+          item.alerts,
+          item.cases_pending,
+          item.cases_processed,
+          item.remarks
+        ])
+      },
+      pagination: true,
+      search: true,
+      sort: true
+    }).render(wrapper);
+  }
+</script>
+{% endblock extra_javascript %}
